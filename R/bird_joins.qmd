@@ -1,0 +1,70 @@
+---
+title: "bird_joins"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(here)
+```
+
+## Task 1:
+
+```{r}
+bird_observations <- read_csv(here("data","52_pp52_birds_1.csv"))
+
+sites <- read_csv(here("data", "52_pp52_sites_1.csv"))
+
+surveys <- read_csv(here("data", "52_pp52_surveys_1.csv"))
+
+taxalist <- read_csv(here("data", "52_pp52_taxalist_1.csv"))
+```
+
+```{r}
+birds_subset <- bird_observations %>% 
+  filter(species_id %in% c("BHCO", "RWBL"), site_id %in% c("LI-W", "NU-C"))
+```
+
+```{r}
+birds_left_intermediate <- left_join(birds_subset, sites, by = join_by(site_id))
+
+birds_left <- left_join(birds_left_intermediate, taxalist, by = join_by(species_id))
+```
+
+```{r}
+birds_full <- full_join(birds_subset, sites, by = join_by(site_id))
+```
+
+## Task 2:
+
+```{r}
+birds <- bird_observations %>% 
+  rename(bird_obs_notes = notes)
+```
+
+```{r}
+bird_site <- left_join(birds, sites)
+
+bird_site_survey <- left_join(bird_site, surveys)
+
+bird_site_survey_tax <- left_join(bird_site_survey, taxalist)
+```
+
+```{r}
+bird_subset <- bird_site_survey_tax %>% 
+  select(survey_date, common_name, park_name, bird_count)
+```
+
+```{r}
+bird_subset_new <- bird_subset %>% 
+  mutate(survey_month = month(survey_date)) %>% 
+  mutate(survey_month = as.factor(survey_month)) %>% 
+  relocate(survey_month, .after = survey_date) %>% 
+  group_by(park_name, survey_month) %>% 
+  mutate(total_bird = n()) %>% 
+  filter(park_name %in% c("Lindo", "Orme", "Palomino", "Sonrisa"))
+
+```
+
+## 
